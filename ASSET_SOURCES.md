@@ -9,3 +9,7 @@ The cleanup removes the player character and interface elements and reconstructs
 The adjacent attic-ladder and window views are AI-generated continuity plates based on the cleaned bedroom background. The ladder layout was additionally informed by publicly documented gameplay behavior:
 
 https://www.gamerevolution.com/guides/937536-resident-evil-4-remake-collapsible-ladder-village-chiefs-manor
+
+The exterior yard is an AI-generated continuity scene informed by the documented Village Chief's Manor Yard connections and layout:
+
+https://www.evilresource.com/resident-evil-4-remake/maps/village/village-chiefs-manor-abandoned-factory-valley/village-chiefs-manor-yard

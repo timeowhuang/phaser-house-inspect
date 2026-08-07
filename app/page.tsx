@@ -38,28 +38,36 @@ export default function Home() {
           this.load.image("village-chief-bedroom", "/rooms/village-chief-bedroom.png");
           this.load.image("village-chief-ladder", "/rooms/village-chief-ladder.png?v=clean-wall");
           this.load.image("village-chief-window", "/rooms/village-chief-window.png?v=sunset");
+          this.load.image("village-chief-yard", "/rooms/village-chief-yard.png");
         }
         create() {
           const views = [
             this.add.image(640, 360, "village-chief-window").setDisplaySize(1280, 720).setAlpha(0),
             this.add.image(640, 360, "village-chief-ladder").setDisplaySize(1280, 720).setAlpha(0),
             this.add.image(640, 360, "village-chief-bedroom").setDisplaySize(1280, 720),
+            this.add.image(640, 360, "village-chief-yard").setDisplaySize(1280, 720).setAlpha(0),
           ];
           let currentView = 2;
           const buttonStyle = { fontFamily: "Georgia", fontSize: "72px", color: "#ddd3bd", backgroundColor: "rgba(5,6,7,.42)", padding: { left: 18, right: 18, top: 2, bottom: 8 } };
           const left = this.add.text(34, 310, "‹", buttonStyle).setDepth(5).setInteractive({ useHandCursor: true });
           const right = this.add.text(1178, 310, "›", buttonStyle).setDepth(5);
           const down = this.add.text(601, 606, "⌄", buttonStyle).setDepth(5);
+          const back = this.add.text(34, 30, "↩", buttonStyle).setDepth(5);
+          const windowHotspot = this.add.rectangle(555, 215, 320, 400, 0xd7b66d, 0).setDepth(4);
 
           const updateControls = () => {
-            [left, right, down].forEach((button) => button.setAlpha(0).disableInteractive());
+            [left, right, down, back].forEach((button) => button.setAlpha(0).disableInteractive());
+            windowHotspot.disableInteractive().setFillStyle(0xd7b66d, 0).setStrokeStyle(0);
             if (currentView === 2) {
               left.setAlpha(1).setInteractive({ useHandCursor: true });
               down.setAlpha(1).setInteractive({ useHandCursor: true });
             } else if (currentView === 1) {
               right.setAlpha(1).setInteractive({ useHandCursor: true });
-            } else {
+            } else if (currentView === 0) {
               down.setAlpha(1).setInteractive({ useHandCursor: true });
+              windowHotspot.setInteractive({ useHandCursor: true });
+            } else {
+              back.setAlpha(1).setInteractive({ useHandCursor: true });
             }
           };
           const turn = (next: number) => {
@@ -74,9 +82,15 @@ export default function Home() {
           left.on("pointerdown", () => currentView === 2 && turn(1));
           right.on("pointerdown", () => currentView === 1 && turn(2));
           down.on("pointerdown", () => currentView === 2 ? turn(0) : currentView === 0 && turn(2));
+          back.on("pointerdown", () => currentView === 3 && turn(0));
+          windowHotspot.on("pointerover", () => currentView === 0 && windowHotspot.setFillStyle(0xd7b66d, .045).setStrokeStyle(2, 0xd7b66d, .55));
+          windowHotspot.on("pointerout", () => windowHotspot.setFillStyle(0xd7b66d, 0).setStrokeStyle(0));
+          windowHotspot.on("pointerdown", () => currentView === 0 && turn(3));
           this.input.keyboard?.on("keydown-LEFT", () => currentView === 2 && turn(1));
           this.input.keyboard?.on("keydown-RIGHT", () => currentView === 1 && turn(2));
           this.input.keyboard?.on("keydown-DOWN", () => currentView === 2 ? turn(0) : currentView === 0 && turn(2));
+          this.input.keyboard?.on("keydown-ENTER", () => currentView === 0 && turn(3));
+          this.input.keyboard?.on("keydown-ESC", () => currentView === 3 && turn(0));
           updateControls();
         }
       }
