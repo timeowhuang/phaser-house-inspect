@@ -92,7 +92,7 @@ export default function Home() {
       const Phaser = window.Phaser;
       class RoomScene extends Phaser.Scene {
         preload() {
-          this.load.image("village-chief-bedroom", "/rooms/village-chief-bedroom.png?v=items");
+          this.load.image("village-chief-bedroom", "/rooms/village-chief-bedroom.png?v=zombie2");
           this.load.image("village-chief-ladder", "/rooms/village-chief-ladder.png?v=roses");
           this.load.image("village-chief-window", "/rooms/village-chief-window.png?v=sunset");
           this.load.image("village-chief-yard", "/rooms/village-chief-yard.png?v=game-reference");
