@@ -65,19 +65,46 @@ export default function Home() {
   const [boxRotation, setBoxRotation] = useState({ x: -18, y: -26 });
   const [boxScale, setBoxScale] = useState(1);
   const boxDrag = useRef({ active: false, pointerId: -1, x: 0, y: 0, rotationX: -18, rotationY: -26 });
+  const boxPointers = useRef(new Map<number, { x: number; y: number }>());
+  const boxPinch = useRef({ distance: 0, scale: 1 });
+
+  const pointerDistance = () => {
+    const points = [...boxPointers.current.values()];
+    return points.length < 2 ? 0 : Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+  };
 
   const beginBoxDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
     event.currentTarget.setPointerCapture(event.pointerId);
+    boxPointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (boxPointers.current.size > 1) {
+      boxDrag.current.active = false;
+      boxPinch.current = { distance: pointerDistance(), scale: boxScale };
+      return;
+    }
     boxDrag.current = { active: true, pointerId: event.pointerId, x: event.clientX, y: event.clientY, rotationX: boxRotation.x, rotationY: boxRotation.y };
   };
   const moveBox = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!boxPointers.current.has(event.pointerId)) return;
+    boxPointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (boxPointers.current.size > 1) {
+      const distance = pointerDistance();
+      if (boxPinch.current.distance > 0) setBoxScale(Math.max(.72, Math.min(1.42, boxPinch.current.scale * distance / boxPinch.current.distance)));
+      return;
+    }
     if (!boxDrag.current.active || boxDrag.current.pointerId !== event.pointerId) return;
     const nextX = Math.max(-55, Math.min(35, boxDrag.current.rotationX - (event.clientY - boxDrag.current.y) * .28));
     const nextY = boxDrag.current.rotationY + (event.clientX - boxDrag.current.x) * .38;
     setBoxRotation({ x: nextX, y: nextY });
   };
   const endBoxDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (boxDrag.current.pointerId === event.pointerId) boxDrag.current.active = false;
+    boxPointers.current.delete(event.pointerId);
+    boxDrag.current.active = false;
+    if (boxPointers.current.size === 1) {
+      const [pointerId, point] = [...boxPointers.current.entries()][0];
+      boxDrag.current = { active: true, pointerId, x: point.x, y: point.y, rotationX: boxRotation.x, rotationY: boxRotation.y };
+    } else {
+      boxPinch.current.distance = 0;
+    }
   };
   const zoomBox = (event: ReactWheelEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -98,6 +125,7 @@ export default function Home() {
           this.load.image("village-chief-yard", "/rooms/village-chief-yard.png?v=game-reference");
         }
         create() {
+          const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
           const views = [
             this.add.image(640, 360, "village-chief-window").setDisplaySize(1280, 720).setAlpha(0),
             this.add.image(640, 360, "village-chief-ladder").setDisplaySize(1280, 720).setAlpha(0),
@@ -106,12 +134,15 @@ export default function Home() {
           ];
           let currentView = 2;
           const buttonStyle = { fontFamily: "Georgia", fontSize: "72px", color: "#ddd3bd", backgroundColor: "rgba(5,6,7,.42)", padding: { left: 18, right: 18, top: 2, bottom: 8 } };
-          const left = this.add.text(34, 310, "‹", buttonStyle).setDepth(5).setInteractive({ useHandCursor: true });
+          const left = this.add.text(34, 310, "‹", buttonStyle).setDepth(5);
           const right = this.add.text(1178, 310, "›", buttonStyle).setDepth(5);
           const down = this.add.text(601, 606, "⌄", buttonStyle).setDepth(5);
-          const windowHotspot = this.add.rectangle(555, 215, 320, 400, 0xd7b66d, 0).setDepth(4);
-          const jewelryHotspot = this.add.rectangle(477, 292, 104, 58, 0xd7b66d, 0).setDepth(4);
-          const dogHotspot = this.add.rectangle(1012, 548, 320, 205, 0xd7b66d, 0).setDepth(4);
+          const leftHit = this.add.rectangle(86, 360, coarsePointer ? 172 : 120, coarsePointer ? 260 : 190, 0xffffff, 0).setDepth(6);
+          const rightHit = this.add.rectangle(1194, 360, coarsePointer ? 172 : 120, coarsePointer ? 260 : 190, 0xffffff, 0).setDepth(6);
+          const downHit = this.add.rectangle(640, 662, coarsePointer ? 300 : 210, coarsePointer ? 116 : 96, 0xffffff, 0).setDepth(6);
+          const windowHotspot = this.add.rectangle(555, 215, coarsePointer ? 390 : 320, coarsePointer ? 470 : 400, 0xd7b66d, 0).setDepth(4);
+          const jewelryHotspot = this.add.rectangle(477, 292, coarsePointer ? 190 : 104, coarsePointer ? 124 : 58, 0xd7b66d, 0).setDepth(4);
+          const dogHotspot = this.add.rectangle(1012, 548, coarsePointer ? 380 : 320, coarsePointer ? 250 : 205, 0xd7b66d, 0).setDepth(4);
           const bedroom = views[2];
           const bedroomBase = { x: bedroom.x, y: bedroom.y, scaleX: bedroom.scaleX, scaleY: bedroom.scaleY };
           let corpseFocused = false;
@@ -137,24 +168,30 @@ export default function Home() {
           });
 
           const updateControls = () => {
-            [left, right, down].forEach((button) => button.setAlpha(0).disableInteractive());
+            [left, right, down, leftHit, rightHit, downHit].forEach((button) => button.setAlpha(0).disableInteractive());
             [windowHotspot, jewelryHotspot, dogHotspot].forEach((hotspot) => hotspot.disableInteractive().setFillStyle(0xd7b66d, 0).setStrokeStyle(0));
             if (corpseFocused) {
-              down.setAlpha(1).setInteractive({ useHandCursor: true });
+              down.setAlpha(1);
+              downHit.setAlpha(1).setInteractive({ useHandCursor: true });
               return;
             }
             if (currentView === 2) {
-              left.setAlpha(1).setInteractive({ useHandCursor: true });
-              down.setAlpha(1).setInteractive({ useHandCursor: true });
+              left.setAlpha(1);
+              down.setAlpha(1);
+              leftHit.setAlpha(1).setInteractive({ useHandCursor: true });
+              downHit.setAlpha(1).setInteractive({ useHandCursor: true });
               jewelryHotspot.setInteractive({ useHandCursor: true });
               dogHotspot.setInteractive({ useHandCursor: true });
             } else if (currentView === 1) {
-              right.setAlpha(1).setInteractive({ useHandCursor: true });
+              right.setAlpha(1);
+              rightHit.setAlpha(1).setInteractive({ useHandCursor: true });
             } else if (currentView === 0) {
-              down.setAlpha(1).setInteractive({ useHandCursor: true });
+              down.setAlpha(1);
+              downHit.setAlpha(1).setInteractive({ useHandCursor: true });
               windowHotspot.setInteractive({ useHandCursor: true });
             } else {
-              down.setAlpha(1).setInteractive({ useHandCursor: true });
+              down.setAlpha(1);
+              downHit.setAlpha(1).setInteractive({ useHandCursor: true });
             }
           };
           const openCorpse = () => {
@@ -191,9 +228,9 @@ export default function Home() {
             this.tweens.add({ targets: previous, alpha: 0, duration: 330, ease: "Sine.easeInOut" });
             this.tweens.add({ targets: incoming, alpha: 1, duration: 330, ease: "Sine.easeInOut" });
           };
-          left.on("pointerdown", () => currentView === 2 && turn(1));
-          right.on("pointerdown", () => currentView === 1 && turn(2));
-          down.on("pointerdown", () => corpseFocused ? closeCorpse() : currentView === 2 ? turn(0) : currentView === 0 ? turn(2) : currentView === 3 && turn(0));
+          leftHit.on("pointerdown", () => currentView === 2 && turn(1));
+          rightHit.on("pointerdown", () => currentView === 1 && turn(2));
+          downHit.on("pointerdown", () => corpseFocused ? closeCorpse() : currentView === 2 ? turn(0) : currentView === 0 ? turn(2) : currentView === 3 && turn(0));
           windowHotspot.on("pointerover", () => currentView === 0 && windowHotspot.setFillStyle(0xd7b66d, .045).setStrokeStyle(2, 0xd7b66d, .55));
           windowHotspot.on("pointerout", () => windowHotspot.setFillStyle(0xd7b66d, 0).setStrokeStyle(0));
           windowHotspot.on("pointerdown", () => currentView === 0 && turn(3));
@@ -231,6 +268,10 @@ export default function Home() {
       <div className="game-frame" aria-label="互动书房场景">
         <div ref={gameRef} className="phaser-stage" />
       </div>
+      <div className="mobile-hint" aria-hidden="true">
+        <span>横屏体验更佳</span>
+        <span>点击箭头移动 · 点击物品查看</span>
+      </div>
 
       <section className={`inspect ${inspectOpen ? "is-open" : ""}`} aria-hidden={!inspectOpen}>
         <div className="inspect-grain" />
@@ -240,7 +281,7 @@ export default function Home() {
           <h1>红锦珠宝盒</h1>
           <p>厚重的长方形盒身包覆着暗红锦绸，金色锁扣没有钥匙孔。里面似乎有什么东西正在轻轻晃动。</p>
           <div className="rule" />
-          <small>拖动旋转 · 滚轮缩放 · ESC 返回</small>
+          <small>拖动旋转 · 双指或滚轮缩放 · ESC / × 返回</small>
         </div>
         <div
           className="jewel-stage"
