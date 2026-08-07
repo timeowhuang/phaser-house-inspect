@@ -49,15 +49,21 @@ export default function Home() {
           const buttonStyle = { fontFamily: "Georgia", fontSize: "72px", color: "#ddd3bd", backgroundColor: "rgba(5,6,7,.42)", padding: { left: 18, right: 18, top: 2, bottom: 8 } };
           const left = this.add.text(34, 310, "‹", buttonStyle).setDepth(5).setInteractive({ useHandCursor: true });
           const right = this.add.text(1178, 310, "›", buttonStyle).setDepth(5);
-          const dots = [0, 1, 2].map((i) => this.add.circle(616 + i * 24, 680, 4, 0xd5c6a5, i === currentView ? .9 : .25).setDepth(5));
+          const up = this.add.text(601, 24, "⌃", buttonStyle).setDepth(5);
+          const down = this.add.text(601, 606, "⌄", buttonStyle).setDepth(5);
 
           const updateControls = () => {
-            if (currentView > 0) left.setAlpha(1).setInteractive({ useHandCursor: true }); else left.setAlpha(0).disableInteractive();
-            if (currentView < views.length - 1) right.setAlpha(1).setInteractive({ useHandCursor: true }); else right.setAlpha(0).disableInteractive();
-            dots.forEach((dot, i) => dot.setAlpha(i === currentView ? .9 : .25));
+            [left, right, up, down].forEach((button) => button.setAlpha(0).disableInteractive());
+            if (currentView === 2) {
+              left.setAlpha(1).setInteractive({ useHandCursor: true });
+              down.setAlpha(1).setInteractive({ useHandCursor: true });
+            } else if (currentView === 1) {
+              right.setAlpha(1).setInteractive({ useHandCursor: true });
+            } else {
+              up.setAlpha(1).setInteractive({ useHandCursor: true });
+            }
           };
-          const turn = (direction: number) => {
-            const next = Phaser.Math.Clamp(currentView + direction, 0, views.length - 1);
+          const turn = (next: number) => {
             if (next === currentView) return;
             const previous = views[currentView];
             const incoming = views[next].setAlpha(0);
@@ -66,10 +72,14 @@ export default function Home() {
             this.tweens.add({ targets: previous, alpha: 0, duration: 330, ease: "Sine.easeInOut" });
             this.tweens.add({ targets: incoming, alpha: 1, duration: 330, ease: "Sine.easeInOut" });
           };
-          left.on("pointerdown", () => turn(-1));
-          right.on("pointerdown", () => turn(1));
-          this.input.keyboard?.on("keydown-LEFT", () => turn(-1));
-          this.input.keyboard?.on("keydown-RIGHT", () => turn(1));
+          left.on("pointerdown", () => currentView === 2 && turn(1));
+          right.on("pointerdown", () => currentView === 1 && turn(2));
+          down.on("pointerdown", () => currentView === 2 && turn(0));
+          up.on("pointerdown", () => currentView === 0 && turn(2));
+          this.input.keyboard?.on("keydown-LEFT", () => currentView === 2 && turn(1));
+          this.input.keyboard?.on("keydown-RIGHT", () => currentView === 1 && turn(2));
+          this.input.keyboard?.on("keydown-DOWN", () => currentView === 2 && turn(0));
+          this.input.keyboard?.on("keydown-UP", () => currentView === 0 && turn(2));
           updateControls();
         }
       }
