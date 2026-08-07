@@ -16,8 +16,6 @@
   <main class="shell">
     <div class="frame" aria-label="互动书房场景">
       <div id="game" class="stage"></div>
-      <div class="hud"><span class="pulse"></span><span id="hint">场景准备完成 · 等待设置互动对象</span></div>
-      <div class="controls"><kbd>下一步</kbd> 指定需要互动的物品</div>
     </div>
     <section id="inspect" class="inspect" aria-hidden="true">
       <div class="grain"></div>
@@ -27,12 +25,12 @@
     </section>
   </main>
   <script>
-    const inspect=document.querySelector('#inspect'),hint=document.querySelector('#hint');
+    const inspect=document.querySelector('#inspect');
     function openInspect(){inspect.classList.add('open');inspect.setAttribute('aria-hidden','false')}
     function closeInspect(){inspect.classList.remove('open');inspect.setAttribute('aria-hidden','true')}
     document.querySelector('#close').addEventListener('click',closeInspect);
     addEventListener('keydown',e=>{if(e.key==='Escape')closeInspect()});
-    class RoomScene extends Phaser.Scene{preload(){this.load.image('village-chief-bedroom','assets/village-chief-bedroom.png')}create(){this.add.image(640,360,'village-chief-bedroom').setDisplaySize(1280,720);this.add.text(52,48,"VILLAGE CHIEF'S MANOR",{fontFamily:'Georgia',fontSize:'22px',color:'#c5b68c',letterSpacing:6});this.add.text(54,80,'二楼卧室 · 00:17',{fontFamily:'Arial',fontSize:'14px',color:'#8c877b',letterSpacing:2})}}
+    class RoomScene extends Phaser.Scene{preload(){this.load.image('bedroom','assets/village-chief-bedroom.png');this.load.image('ladder','assets/village-chief-ladder.png');this.load.image('window','assets/village-chief-window.png')}create(){const views=[this.add.image(640,360,'window').setDisplaySize(1280,720).setAlpha(0),this.add.image(640,360,'ladder').setDisplaySize(1280,720).setAlpha(0),this.add.image(640,360,'bedroom').setDisplaySize(1280,720)];let current=2;const style={fontFamily:'Georgia',fontSize:'72px',color:'#ddd3bd',backgroundColor:'rgba(5,6,7,.42)',padding:{left:18,right:18,top:2,bottom:8}};const left=this.add.text(34,310,'‹',style).setDepth(5).setInteractive({useHandCursor:true}),right=this.add.text(1178,310,'›',style).setDepth(5);const dots=[0,1,2].map(i=>this.add.circle(616+i*24,680,4,0xd5c6a5,i===current ? .9 : .25).setDepth(5));const controls=()=>{current>0?left.setAlpha(1).setInteractive({useHandCursor:true}):left.setAlpha(0).disableInteractive();current<views.length-1?right.setAlpha(1).setInteractive({useHandCursor:true}):right.setAlpha(0).disableInteractive();dots.forEach((d,i)=>d.setAlpha(i===current ? .9 : .25))};const turn=direction=>{const next=Phaser.Math.Clamp(current+direction,0,views.length-1);if(next===current)return;const previous=views[current],incoming=views[next].setAlpha(0);current=next;controls();this.tweens.add({targets:previous,alpha:0,duration:330,ease:'Sine.easeInOut'});this.tweens.add({targets:incoming,alpha:1,duration:330,ease:'Sine.easeInOut'})};left.on('pointerdown',()=>turn(-1));right.on('pointerdown',()=>turn(1));this.input.keyboard.on('keydown-LEFT',()=>turn(-1));this.input.keyboard.on('keydown-RIGHT',()=>turn(1));controls()}}
     new Phaser.Game({type:Phaser.AUTO,parent:'game',width:1280,height:720,backgroundColor:'#090a0c',scene:RoomScene,scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH}});
   </script>
 </body>

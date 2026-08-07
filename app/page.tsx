@@ -26,7 +26,6 @@ function loadScript(src: string, module = false) {
 export default function Home() {
   const gameRef = useRef<HTMLDivElement>(null);
   const [inspectOpen, setInspectOpen] = useState(false);
-  const [hint] = useState("场景准备完成 · 等待设置互动对象");
 
   useEffect(() => {
     let game: any;
@@ -37,11 +36,41 @@ export default function Home() {
       class RoomScene extends Phaser.Scene {
         preload() {
           this.load.image("village-chief-bedroom", "/rooms/village-chief-bedroom.png");
+          this.load.image("village-chief-ladder", "/rooms/village-chief-ladder.png");
+          this.load.image("village-chief-window", "/rooms/village-chief-window.png");
         }
         create() {
-          this.add.image(640, 360, "village-chief-bedroom").setDisplaySize(1280, 720);
-          this.add.text(52, 48, "VILLAGE CHIEF'S MANOR", { fontFamily: "Georgia", fontSize: "22px", color: "#c5b68c", letterSpacing: 6 });
-          this.add.text(54, 80, "二楼卧室 · 00:17", { fontFamily: "Arial", fontSize: "14px", color: "#8c877b", letterSpacing: 2 });
+          const views = [
+            this.add.image(640, 360, "village-chief-window").setDisplaySize(1280, 720).setAlpha(0),
+            this.add.image(640, 360, "village-chief-ladder").setDisplaySize(1280, 720).setAlpha(0),
+            this.add.image(640, 360, "village-chief-bedroom").setDisplaySize(1280, 720),
+          ];
+          let currentView = 2;
+          const buttonStyle = { fontFamily: "Georgia", fontSize: "72px", color: "#ddd3bd", backgroundColor: "rgba(5,6,7,.42)", padding: { left: 18, right: 18, top: 2, bottom: 8 } };
+          const left = this.add.text(34, 310, "‹", buttonStyle).setDepth(5).setInteractive({ useHandCursor: true });
+          const right = this.add.text(1178, 310, "›", buttonStyle).setDepth(5);
+          const dots = [0, 1, 2].map((i) => this.add.circle(616 + i * 24, 680, 4, 0xd5c6a5, i === currentView ? .9 : .25).setDepth(5));
+
+          const updateControls = () => {
+            if (currentView > 0) left.setAlpha(1).setInteractive({ useHandCursor: true }); else left.setAlpha(0).disableInteractive();
+            if (currentView < views.length - 1) right.setAlpha(1).setInteractive({ useHandCursor: true }); else right.setAlpha(0).disableInteractive();
+            dots.forEach((dot, i) => dot.setAlpha(i === currentView ? .9 : .25));
+          };
+          const turn = (direction: number) => {
+            const next = Phaser.Math.Clamp(currentView + direction, 0, views.length - 1);
+            if (next === currentView) return;
+            const previous = views[currentView];
+            const incoming = views[next].setAlpha(0);
+            currentView = next;
+            updateControls();
+            this.tweens.add({ targets: previous, alpha: 0, duration: 330, ease: "Sine.easeInOut" });
+            this.tweens.add({ targets: incoming, alpha: 1, duration: 330, ease: "Sine.easeInOut" });
+          };
+          left.on("pointerdown", () => turn(-1));
+          right.on("pointerdown", () => turn(1));
+          this.input.keyboard?.on("keydown-LEFT", () => turn(-1));
+          this.input.keyboard?.on("keydown-RIGHT", () => turn(1));
+          updateControls();
         }
       }
       game = new Phaser.Game({ type: Phaser.AUTO, parent: gameRef.current, width: 1280, height: 720, backgroundColor: "#090a0c", scene: RoomScene, scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH } });
@@ -58,8 +87,6 @@ export default function Home() {
     <main className="game-shell">
       <div className="game-frame" aria-label="互动书房场景">
         <div ref={gameRef} className="phaser-stage" />
-        <div className="hud"><span className="pulse" />{hint}</div>
-        <div className="controls"><kbd>下一步</kbd> 指定需要互动的物品</div>
       </div>
 
       <section className={`inspect ${inspectOpen ? "is-open" : ""}`} aria-hidden={!inspectOpen}>
