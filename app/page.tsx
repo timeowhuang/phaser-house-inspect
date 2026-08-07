@@ -1,22 +1,58 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
+
+interface PhaserNode {
+  x: number;
+  y: number;
+  scaleX: number;
+  scaleY: number;
+  rotation: number;
+  setDisplaySize(width: number, height: number): this;
+  setAlpha(alpha: number): this;
+  setDepth(depth: number): this;
+  setInteractive(config?: { useHandCursor?: boolean }): this;
+  disableInteractive(): this;
+  setFillStyle(color: number, alpha?: number): this;
+  setStrokeStyle(width?: number, color?: number, alpha?: number): this;
+  setScale(scale: number): this;
+  on(event: string, callback: () => void): this;
+}
+
+interface PhaserSceneApi {
+  load: { image(key: string, url: string): void };
+  add: {
+    image(x: number, y: number, key: string): PhaserNode;
+    text(x: number, y: number, text: string, style: object): PhaserNode;
+    rectangle(x: number, y: number, width: number, height: number, color: number, alpha?: number): PhaserNode;
+    ellipse(x: number, y: number, width: number, height: number, color: number, alpha?: number): PhaserNode;
+    container(x: number, y: number, children: PhaserNode[]): PhaserNode;
+  };
+  tweens: { add(config: Record<string, unknown>): unknown };
+  events: { on(event: string, callback: (time: number, delta: number) => void): void };
+  input: { keyboard?: { on(event: string, callback: () => void): void } };
+}
+
+interface PhaserGameInstance { destroy(removeCanvas?: boolean): void }
+interface PhaserRuntime {
+  Scene: new () => PhaserSceneApi;
+  Game: new (config: Record<string, unknown>) => PhaserGameInstance;
+  AUTO: unknown;
+  Scale: { FIT: unknown; CENTER_BOTH: unknown };
+}
 
 declare global {
-  interface Window { Phaser?: any; }
-  namespace JSX { interface IntrinsicElements { "model-viewer": any; } }
+  interface Window { Phaser?: PhaserRuntime; }
 }
 
 const PHASER_URL = "https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js";
-const MODEL_VIEWER_URL = "https://unpkg.com/@google/model-viewer@4.1.0/dist/model-viewer.min.js";
 
-function loadScript(src: string, module = false) {
+function loadScript(src: string) {
   return new Promise<void>((resolve, reject) => {
     const found = document.querySelector(`script[src="${src}"]`) as HTMLScriptElement | null;
     if (found) { if (src === PHASER_URL && window.Phaser) resolve(); else found.addEventListener("load", () => resolve(), { once: true }); return; }
     const script = document.createElement("script");
     script.src = src;
-    if (module) script.type = "module";
     script.onload = () => resolve();
     script.onerror = reject;
     document.head.appendChild(script);
@@ -26,17 +62,38 @@ function loadScript(src: string, module = false) {
 export default function Home() {
   const gameRef = useRef<HTMLDivElement>(null);
   const [inspectOpen, setInspectOpen] = useState(false);
+  const [boxRotation, setBoxRotation] = useState({ x: -18, y: -26 });
+  const [boxScale, setBoxScale] = useState(1);
+  const boxDrag = useRef({ active: false, pointerId: -1, x: 0, y: 0, rotationX: -18, rotationY: -26 });
+
+  const beginBoxDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
+    event.currentTarget.setPointerCapture(event.pointerId);
+    boxDrag.current = { active: true, pointerId: event.pointerId, x: event.clientX, y: event.clientY, rotationX: boxRotation.x, rotationY: boxRotation.y };
+  };
+  const moveBox = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!boxDrag.current.active || boxDrag.current.pointerId !== event.pointerId) return;
+    const nextX = Math.max(-55, Math.min(35, boxDrag.current.rotationX - (event.clientY - boxDrag.current.y) * .28));
+    const nextY = boxDrag.current.rotationY + (event.clientX - boxDrag.current.x) * .38;
+    setBoxRotation({ x: nextX, y: nextY });
+  };
+  const endBoxDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (boxDrag.current.pointerId === event.pointerId) boxDrag.current.active = false;
+  };
+  const zoomBox = (event: ReactWheelEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setBoxScale((scale) => Math.max(.72, Math.min(1.42, scale - event.deltaY * .0007)));
+  };
 
   useEffect(() => {
-    let game: any;
+    let game: PhaserGameInstance | undefined;
     let cancelled = false;
-    Promise.all([loadScript(PHASER_URL), loadScript(MODEL_VIEWER_URL, true)]).then(() => {
+    loadScript(PHASER_URL).then(() => {
       if (cancelled || !gameRef.current || !window.Phaser) return;
       const Phaser = window.Phaser;
       class RoomScene extends Phaser.Scene {
         preload() {
-          this.load.image("village-chief-bedroom", "/rooms/village-chief-bedroom.png");
-          this.load.image("village-chief-ladder", "/rooms/village-chief-ladder.png?v=clean-wall");
+          this.load.image("village-chief-bedroom", "/rooms/village-chief-bedroom.png?v=items");
+          this.load.image("village-chief-ladder", "/rooms/village-chief-ladder.png?v=roses");
           this.load.image("village-chief-window", "/rooms/village-chief-window.png?v=sunset");
           this.load.image("village-chief-yard", "/rooms/village-chief-yard.png?v=game-reference");
         }
@@ -53,13 +110,44 @@ export default function Home() {
           const right = this.add.text(1178, 310, "›", buttonStyle).setDepth(5);
           const down = this.add.text(601, 606, "⌄", buttonStyle).setDepth(5);
           const windowHotspot = this.add.rectangle(555, 215, 320, 400, 0xd7b66d, 0).setDepth(4);
+          const jewelryHotspot = this.add.rectangle(477, 292, 104, 58, 0xd7b66d, 0).setDepth(4);
+          const dogHotspot = this.add.rectangle(1012, 548, 320, 205, 0xd7b66d, 0).setDepth(4);
+          const bedroom = views[2];
+          const bedroomBase = { x: bedroom.x, y: bedroom.y, scaleX: bedroom.scaleX, scaleY: bedroom.scaleY };
+          let corpseFocused = false;
+
+          const flies = Array.from({ length: 9 }, (_, index) => {
+            const leftWing = this.add.ellipse(-2.2, -1, 3.5, 1.5, 0xc7bda4, .42);
+            const rightWing = this.add.ellipse(2.2, -1, 3.5, 1.5, 0xc7bda4, .42);
+            const body = this.add.ellipse(0, 0, 5.5, 2.5, 0x0c0a08, 1);
+            return this.add.container(640, 360, [leftWing, rightWing, body]).setDepth(12).setAlpha(0).setScale(.8 + index % 3 * .16);
+          });
+          let flyClock = 0;
+          this.events.on("update", (_time: number, delta: number) => {
+            if (!corpseFocused) return;
+            flyClock += delta * .001;
+            flies.forEach((fly, index) => {
+              const phase = flyClock * (1.35 + index % 4 * .22) + index * 1.91;
+              const radiusX = 62 + index % 3 * 34;
+              const radiusY = 27 + index % 4 * 13;
+              fly.x = 650 + Math.cos(phase) * radiusX + Math.sin(phase * 2.6) * 13;
+              fly.y = 360 + Math.sin(phase * 1.55) * radiusY + Math.cos(phase * 3.1) * 9;
+              fly.rotation = phase * 1.7;
+            });
+          });
 
           const updateControls = () => {
             [left, right, down].forEach((button) => button.setAlpha(0).disableInteractive());
-            windowHotspot.disableInteractive().setFillStyle(0xd7b66d, 0).setStrokeStyle(0);
+            [windowHotspot, jewelryHotspot, dogHotspot].forEach((hotspot) => hotspot.disableInteractive().setFillStyle(0xd7b66d, 0).setStrokeStyle(0));
+            if (corpseFocused) {
+              down.setAlpha(1).setInteractive({ useHandCursor: true });
+              return;
+            }
             if (currentView === 2) {
               left.setAlpha(1).setInteractive({ useHandCursor: true });
               down.setAlpha(1).setInteractive({ useHandCursor: true });
+              jewelryHotspot.setInteractive({ useHandCursor: true });
+              dogHotspot.setInteractive({ useHandCursor: true });
             } else if (currentView === 1) {
               right.setAlpha(1).setInteractive({ useHandCursor: true });
             } else if (currentView === 0) {
@@ -68,6 +156,31 @@ export default function Home() {
             } else {
               down.setAlpha(1).setInteractive({ useHandCursor: true });
             }
+          };
+          const openCorpse = () => {
+            if (currentView !== 2 || corpseFocused) return;
+            corpseFocused = true;
+            updateControls();
+            const zoom = 1.86;
+            const dogX = 1012;
+            const dogY = 548;
+            flies.forEach((fly) => this.tweens.add({ targets: fly, alpha: .9, duration: 260, delay: Math.random() * 180 }));
+            this.tweens.add({
+              targets: bedroom,
+              x: 640 - (dogX - 640) * zoom,
+              y: 360 - (dogY - 360) * zoom,
+              scaleX: bedroomBase.scaleX * zoom,
+              scaleY: bedroomBase.scaleY * zoom,
+              duration: 620,
+              ease: "Sine.easeInOut",
+            });
+          };
+          const closeCorpse = () => {
+            if (!corpseFocused) return;
+            corpseFocused = false;
+            flies.forEach((fly) => fly.setAlpha(0));
+            this.tweens.add({ targets: bedroom, ...bedroomBase, duration: 520, ease: "Sine.easeInOut" });
+            updateControls();
           };
           const turn = (next: number) => {
             if (next === currentView) return;
@@ -80,15 +193,26 @@ export default function Home() {
           };
           left.on("pointerdown", () => currentView === 2 && turn(1));
           right.on("pointerdown", () => currentView === 1 && turn(2));
-          down.on("pointerdown", () => currentView === 2 ? turn(0) : currentView === 0 ? turn(2) : currentView === 3 && turn(0));
+          down.on("pointerdown", () => corpseFocused ? closeCorpse() : currentView === 2 ? turn(0) : currentView === 0 ? turn(2) : currentView === 3 && turn(0));
           windowHotspot.on("pointerover", () => currentView === 0 && windowHotspot.setFillStyle(0xd7b66d, .045).setStrokeStyle(2, 0xd7b66d, .55));
           windowHotspot.on("pointerout", () => windowHotspot.setFillStyle(0xd7b66d, 0).setStrokeStyle(0));
           windowHotspot.on("pointerdown", () => currentView === 0 && turn(3));
+          jewelryHotspot.on("pointerover", () => currentView === 2 && !corpseFocused && jewelryHotspot.setFillStyle(0x9f2030, .1).setStrokeStyle(2, 0xd7b66d, .62));
+          jewelryHotspot.on("pointerout", () => jewelryHotspot.setFillStyle(0xd7b66d, 0).setStrokeStyle(0));
+          jewelryHotspot.on("pointerdown", () => {
+            if (currentView !== 2 || corpseFocused) return;
+            setBoxRotation({ x: -18, y: -26 });
+            setBoxScale(1);
+            setInspectOpen(true);
+          });
+          dogHotspot.on("pointerover", () => currentView === 2 && !corpseFocused && dogHotspot.setFillStyle(0x4f311f, .055).setStrokeStyle(2, 0x8d7652, .42));
+          dogHotspot.on("pointerout", () => dogHotspot.setFillStyle(0xd7b66d, 0).setStrokeStyle(0));
+          dogHotspot.on("pointerdown", openCorpse);
           this.input.keyboard?.on("keydown-LEFT", () => currentView === 2 && turn(1));
           this.input.keyboard?.on("keydown-RIGHT", () => currentView === 1 && turn(2));
-          this.input.keyboard?.on("keydown-DOWN", () => currentView === 2 ? turn(0) : currentView === 0 ? turn(2) : currentView === 3 && turn(0));
+          this.input.keyboard?.on("keydown-DOWN", () => corpseFocused ? closeCorpse() : currentView === 2 ? turn(0) : currentView === 0 ? turn(2) : currentView === 3 && turn(0));
           this.input.keyboard?.on("keydown-ENTER", () => currentView === 0 && turn(3));
-          this.input.keyboard?.on("keydown-ESC", () => currentView === 3 && turn(0));
+          this.input.keyboard?.on("keydown-ESC", () => corpseFocused ? closeCorpse() : currentView === 3 && turn(0));
           updateControls();
         }
       }
@@ -113,25 +237,30 @@ export default function Home() {
         <button className="close" onClick={() => setInspectOpen(false)} aria-label="关闭道具检视">×</button>
         <div className="item-copy">
           <span className="eyebrow">ARCHIVE ITEM · 001</span>
-          <h1>无名访客</h1>
-          <p>在书房的旧木桌上发现。金属表面没有氧化，也摸不到任何接缝。</p>
+          <h1>红锦珠宝盒</h1>
+          <p>厚重的长方形盒身包覆着暗红锦绸，金色锁扣没有钥匙孔。里面似乎有什么东西正在轻轻晃动。</p>
           <div className="rule" />
           <small>拖动旋转 · 滚轮缩放 · ESC 返回</small>
         </div>
-        <model-viewer
-          class="model"
-          src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
-          alt="一尊可旋转观察的神秘金属人像"
-          camera-controls
-          disable-pan
-          shadow-intensity="1.4"
-          shadow-softness=".8"
-          environment-image="neutral"
-          exposure="0.65"
-          camera-orbit="35deg 75deg 2.4m"
-          min-camera-orbit="auto auto 1.6m"
-          max-camera-orbit="auto auto 4m"
-        />
+        <div
+          className="jewel-stage"
+          onPointerDown={beginBoxDrag}
+          onPointerMove={moveBox}
+          onPointerUp={endBoxDrag}
+          onPointerCancel={endBoxDrag}
+          onWheel={zoomBox}
+          aria-label="可拖动旋转观察的红锦珠宝盒"
+        >
+          <div className="jewel-shadow" />
+          <div className="jewel-box-3d" style={{ transform: `scale(${boxScale}) rotateX(${boxRotation.x}deg) rotateY(${boxRotation.y}deg)` }}>
+            <div className="jewel-face jewel-front"><span className="jewel-clasp" /></div>
+            <div className="jewel-face jewel-back" />
+            <div className="jewel-face jewel-left" />
+            <div className="jewel-face jewel-right" />
+            <div className="jewel-face jewel-top"><span className="jewel-crest">✦</span></div>
+            <div className="jewel-face jewel-bottom" />
+          </div>
+        </div>
       </section>
     </main>
   );

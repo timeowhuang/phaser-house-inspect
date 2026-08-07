@@ -5,32 +5,145 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#050607">
   <title>The Silent House · Phaser 互动探索</title>
-  <meta name="description" content="使用 Phaser 构建的互动房间与 3D 道具检视体验">
+  <meta name="description" content="使用 Phaser 构建的互动房间与道具检视体验">
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
-  <script type="module" src="https://unpkg.com/@google/model-viewer@4.1.0/dist/model-viewer.min.js"></script>
   <style>
-    :root{--bone:#d8ccb0;--gold:#b9a06a}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:#050607;color:var(--bone);overflow:hidden;font-family:Arial,Helvetica,sans-serif}.shell{width:100vw;height:100dvh;display:grid;place-items:center;background:radial-gradient(circle at 50% 35%,#232321 0,#0b0d0f 52%,#030405 100%)}.frame{width:min(100vw,177.78vh);aspect-ratio:16/9;position:relative;overflow:hidden;box-shadow:0 0 100px #000}.stage,.stage canvas{width:100%!important;height:100%!important;display:block}.frame:after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 160px 45px rgba(0,0,0,.9);background:repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 3px)}.hud{position:absolute;z-index:2;left:50%;bottom:7%;transform:translateX(-50%);padding:12px 19px;border:1px solid rgba(201,183,137,.22);background:rgba(6,7,8,.72);backdrop-filter:blur(8px);color:#c4bba5;font-size:12px;letter-spacing:1.8px;text-transform:uppercase;white-space:nowrap}.pulse{display:inline-block;width:6px;height:6px;margin-right:11px;border-radius:50%;background:#c4a765;box-shadow:0 0 12px #d8b968;animation:pulse 1.5s infinite}.controls{position:absolute;z-index:2;right:3.5%;bottom:3.5%;color:#716e67;font-size:11px;letter-spacing:1px}kbd{border:1px solid #4a4740;padding:3px 6px;color:#999184;font-family:inherit}.inspect{position:fixed;z-index:20;inset:0;visibility:hidden;opacity:0;transition:opacity .35s ease,visibility .35s;background:radial-gradient(circle at 65% 45%,#222220 0,#0c0d0e 40%,#030405 80%)}.inspect.open{visibility:visible;opacity:1}.grain{position:absolute;inset:0;opacity:.16;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E")}.close{position:absolute;z-index:4;top:34px;right:42px;width:50px;height:50px;border:1px solid #5c574c;border-radius:50%;background:transparent;color:#aaa18e;font-size:30px;cursor:pointer;transition:.2s}.close:hover{color:#fff;border-color:#bbaa84;transform:rotate(90deg)}.copy{position:absolute;z-index:3;left:8vw;top:50%;width:min(340px,32vw);transform:translateY(-50%)}.eyebrow{color:var(--gold);font:11px/1.4 "Courier New",monospace;letter-spacing:3px}.copy h1{margin:22px 0 18px;color:#eee7d7;font:400 clamp(38px,5vw,74px)/.95 Georgia,serif;letter-spacing:.08em}.copy p{color:#8f8b82;font:15px/1.9 Georgia,serif}.rule{width:42px;height:1px;margin:28px 0;background:var(--gold)}.copy small{color:#68655e;font-size:10px;letter-spacing:1.8px}.model{position:absolute;right:3vw;top:4vh;width:65vw;height:92vh;--poster-color:transparent}@keyframes pulse{50%{opacity:.35;box-shadow:0 0 4px #d8b968}}@media(max-width:700px){.frame{width:100vw;height:100dvh;aspect-ratio:auto}.controls{display:none}.hud{bottom:4%;max-width:88vw;overflow:hidden;text-overflow:ellipsis}.copy{left:7vw;top:auto;bottom:6vh;width:86vw;transform:none}.copy h1{margin:10px 0;font-size:42px}.copy p{max-width:70%;margin:0;font-size:12px;line-height:1.5}.rule{margin:14px 0}.model{right:0;top:3vh;width:100vw;height:66vh}}@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+    :root{--bone:#d8ccb0;--gold:#b9a06a}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:#050607;color:var(--bone);overflow:hidden;font-family:Arial,Helvetica,sans-serif}.shell{width:100vw;height:100dvh;display:grid;place-items:center;background:radial-gradient(circle at 50% 35%,#232321 0,#0b0d0f 52%,#030405 100%)}.frame{width:min(100vw,177.78vh);aspect-ratio:16/9;position:relative;overflow:hidden;box-shadow:0 0 100px #000}.stage,.stage canvas{width:100%!important;height:100%!important;display:block}.frame:after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 160px 45px rgba(0,0,0,.9);background:repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 3px)}
+    .inspect{position:fixed;z-index:20;inset:0;visibility:hidden;opacity:0;transition:opacity .35s ease,visibility .35s;background:radial-gradient(circle at 65% 45%,#222220 0,#0c0d0e 40%,#030405 80%)}.inspect.open{visibility:visible;opacity:1}.grain{position:absolute;inset:0;opacity:.16;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E")}.close{position:absolute;z-index:4;top:34px;right:42px;width:50px;height:50px;border:1px solid #5c574c;border-radius:50%;background:transparent;color:#aaa18e;font-size:30px;cursor:pointer;transition:.2s}.close:hover{color:#fff;border-color:#bbaa84;transform:rotate(90deg)}.copy{position:absolute;z-index:3;left:8vw;top:50%;width:min(340px,32vw);transform:translateY(-50%)}.eyebrow{color:var(--gold);font:11px/1.4 "Courier New",monospace;letter-spacing:3px}.copy h1{margin:22px 0 18px;color:#eee7d7;font:400 clamp(38px,5vw,74px)/.95 Georgia,serif;letter-spacing:.08em}.copy p{color:#8f8b82;font:15px/1.9 Georgia,serif}.rule{width:42px;height:1px;margin:28px 0;background:var(--gold)}.copy small{color:#68655e;font-size:10px;letter-spacing:1.8px}
+    .jewel-stage{position:absolute;right:1vw;top:0;width:67vw;height:100vh;display:grid;place-items:center;perspective:1200px;cursor:grab;touch-action:none;user-select:none}.jewel-stage:active{cursor:grabbing}.jewel-shadow{position:absolute;width:min(520px,48vw);height:120px;margin-top:280px;border-radius:50%;background:radial-gradient(ellipse,rgba(0,0,0,.9),rgba(0,0,0,0) 70%);filter:blur(10px);transform:rotate(-4deg)}.jewel-box-3d{position:relative;width:360px;height:112px;transform-style:preserve-3d;will-change:transform}.jewel-face{position:absolute;border:3px solid #ad8b3e;background-color:#6e0714;background-image:radial-gradient(circle at 20% 25%,rgba(255,179,177,.22) 0 2px,transparent 3px),radial-gradient(circle at 72% 68%,rgba(255,190,173,.13) 0 2px,transparent 3px),repeating-linear-gradient(120deg,rgba(255,255,255,.045) 0 1px,transparent 1px 6px),linear-gradient(145deg,#a91d2d 0,#690612 48%,#3e040b 100%);box-shadow:inset 0 0 24px rgba(255,176,124,.12),inset 0 0 0 3px rgba(57,0,7,.72),0 0 18px rgba(0,0,0,.45);backface-visibility:hidden}.jewel-front,.jewel-back{width:360px;height:112px}.jewel-front{transform:translateZ(105px)}.jewel-front:before{content:"";position:absolute;left:0;right:0;top:29px;height:3px;background:linear-gradient(90deg,#6f511b,#d7bd68,#72531e);box-shadow:0 2px 5px rgba(0,0,0,.65)}.jewel-back{transform:rotateY(180deg) translateZ(105px)}.jewel-left,.jewel-right{left:75px;width:210px;height:112px}.jewel-left{transform:rotateY(-90deg) translateZ(180px)}.jewel-right{transform:rotateY(90deg) translateZ(180px)}.jewel-top,.jewel-bottom{top:-49px;width:360px;height:210px}.jewel-top{display:grid;place-items:center;transform:rotateX(90deg) translateZ(56px);background-image:radial-gradient(ellipse at center,rgba(255,219,181,.2),transparent 42%),repeating-radial-gradient(circle at 25% 30%,rgba(221,160,111,.14) 0 2px,transparent 3px 13px),linear-gradient(135deg,#b42235,#690612 60%,#43040c)}.jewel-bottom{transform:rotateX(-90deg) translateZ(56px);background:#240207;border-color:#5d451b}.jewel-clasp{position:absolute;z-index:2;left:50%;top:22px;width:36px;height:43px;transform:translateX(-50%);border:2px solid #e0c56f;border-radius:4px 4px 9px 9px;background:linear-gradient(135deg,#6f4d15,#e0c66f 45%,#7b5619);box-shadow:0 2px 7px #210003}.jewel-clasp:after{content:"";position:absolute;left:50%;top:13px;width:7px;height:12px;transform:translateX(-50%);border-radius:50% 50% 35% 35%;background:#3c250c;box-shadow:inset 0 1px #000}.jewel-crest{display:grid;place-items:center;width:86px;height:86px;border:1px solid rgba(231,203,112,.78);border-radius:50%;color:#d9b95d;font-size:29px;text-shadow:0 0 8px rgba(240,194,91,.45);box-shadow:inset 0 0 0 5px rgba(104,60,18,.22)}
+    @media(max-width:700px){.frame{width:100vw;height:100dvh;aspect-ratio:auto}.copy{left:7vw;top:auto;bottom:6vh;width:86vw;transform:none}.copy h1{margin:10px 0;font-size:42px}.copy p{max-width:70%;margin:0;font-size:12px;line-height:1.5}.rule{margin:14px 0}.jewel-stage{right:0;top:0;width:100vw;height:68vh;transform:scale(.72)}.jewel-shadow{margin-top:240px}}@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
   </style>
 </head>
 <body>
   <main class="shell">
-    <div class="frame" aria-label="互动书房场景">
-      <div id="game" class="stage"></div>
-    </div>
+    <div class="frame" aria-label="互动书房场景"><div id="game" class="stage"></div></div>
     <section id="inspect" class="inspect" aria-hidden="true">
       <div class="grain"></div>
       <button id="close" class="close" aria-label="关闭道具检视">×</button>
-      <div class="copy"><span class="eyebrow">ARCHIVE ITEM · 001</span><h1>无名访客</h1><p>在书房的旧木桌上发现。金属表面没有氧化，也摸不到任何接缝。</p><div class="rule"></div><small>拖动旋转 · 滚轮缩放 · ESC 返回</small></div>
-      <model-viewer class="model" src="https://modelviewer.dev/shared-assets/models/Astronaut.glb" alt="一尊可旋转观察的神秘金属人像" camera-controls disable-pan shadow-intensity="1.4" shadow-softness=".8" environment-image="neutral" exposure="0.65" camera-orbit="35deg 75deg 2.4m" min-camera-orbit="auto auto 1.6m" max-camera-orbit="auto auto 4m"></model-viewer>
+      <div class="copy">
+        <span class="eyebrow">ARCHIVE ITEM · 001</span>
+        <h1>红锦珠宝盒</h1>
+        <p>厚重的长方形盒身包覆着暗红锦绸，金色锁扣没有钥匙孔。里面似乎有什么东西正在轻轻晃动。</p>
+        <div class="rule"></div>
+        <small>拖动旋转 · 滚轮缩放 · ESC 返回</small>
+      </div>
+      <div id="jewel-stage" class="jewel-stage" aria-label="可拖动旋转观察的红锦珠宝盒">
+        <div class="jewel-shadow"></div>
+        <div id="jewel-box" class="jewel-box-3d">
+          <div class="jewel-face jewel-front"><span class="jewel-clasp"></span></div>
+          <div class="jewel-face jewel-back"></div>
+          <div class="jewel-face jewel-left"></div>
+          <div class="jewel-face jewel-right"></div>
+          <div class="jewel-face jewel-top"><span class="jewel-crest">✦</span></div>
+          <div class="jewel-face jewel-bottom"></div>
+        </div>
+      </div>
     </section>
   </main>
   <script>
     const inspect=document.querySelector('#inspect');
-    function openInspect(){inspect.classList.add('open');inspect.setAttribute('aria-hidden','false')}
+    const jewelStage=document.querySelector('#jewel-stage');
+    const jewelBox=document.querySelector('#jewel-box');
+    let rotationX=-18,rotationY=-26,boxScale=1,drag=null;
+    const renderJewel=()=>{jewelBox.style.transform=`scale(${boxScale}) rotateX(${rotationX}deg) rotateY(${rotationY}deg)`};
+    function openInspect(){rotationX=-18;rotationY=-26;boxScale=1;renderJewel();inspect.classList.add('open');inspect.setAttribute('aria-hidden','false')}
     function closeInspect(){inspect.classList.remove('open');inspect.setAttribute('aria-hidden','true')}
+    jewelStage.addEventListener('pointerdown',event=>{jewelStage.setPointerCapture(event.pointerId);drag={pointerId:event.pointerId,x:event.clientX,y:event.clientY,rotationX,rotationY}});
+    jewelStage.addEventListener('pointermove',event=>{if(!drag||drag.pointerId!==event.pointerId)return;rotationX=Math.max(-55,Math.min(35,drag.rotationX-(event.clientY-drag.y)*.28));rotationY=drag.rotationY+(event.clientX-drag.x)*.38;renderJewel()});
+    const endDrag=event=>{if(drag&&drag.pointerId===event.pointerId)drag=null};
+    jewelStage.addEventListener('pointerup',endDrag);jewelStage.addEventListener('pointercancel',endDrag);
+    jewelStage.addEventListener('wheel',event=>{event.preventDefault();boxScale=Math.max(.72,Math.min(1.42,boxScale-event.deltaY*.0007));renderJewel()},{passive:false});
     document.querySelector('#close').addEventListener('click',closeInspect);
-    addEventListener('keydown',e=>{if(e.key==='Escape')closeInspect()});
-    class RoomScene extends Phaser.Scene{preload(){this.load.image('bedroom','assets/village-chief-bedroom.png');this.load.image('ladder','assets/village-chief-ladder.png?v=clean-wall');this.load.image('window','assets/village-chief-window.png?v=sunset');this.load.image('yard','assets/village-chief-yard.png?v=game-reference')}create(){const views=[this.add.image(640,360,'window').setDisplaySize(1280,720).setAlpha(0),this.add.image(640,360,'ladder').setDisplaySize(1280,720).setAlpha(0),this.add.image(640,360,'bedroom').setDisplaySize(1280,720),this.add.image(640,360,'yard').setDisplaySize(1280,720).setAlpha(0)];let current=2;const style={fontFamily:'Georgia',fontSize:'72px',color:'#ddd3bd',backgroundColor:'rgba(5,6,7,.42)',padding:{left:18,right:18,top:2,bottom:8}};const left=this.add.text(34,310,'‹',style).setDepth(5).setInteractive({useHandCursor:true}),right=this.add.text(1178,310,'›',style).setDepth(5),down=this.add.text(601,606,'⌄',style).setDepth(5),hotspot=this.add.rectangle(555,215,320,400,0xd7b66d,0).setDepth(4);const controls=()=>{[left,right,down].forEach(b=>b.setAlpha(0).disableInteractive());hotspot.disableInteractive().setFillStyle(0xd7b66d,0).setStrokeStyle(0);if(current===2){left.setAlpha(1).setInteractive({useHandCursor:true});down.setAlpha(1).setInteractive({useHandCursor:true})}else if(current===1){right.setAlpha(1).setInteractive({useHandCursor:true})}else if(current===0){down.setAlpha(1).setInteractive({useHandCursor:true});hotspot.setInteractive({useHandCursor:true})}else{down.setAlpha(1).setInteractive({useHandCursor:true})}};const turn=next=>{if(next===current)return;const previous=views[current],incoming=views[next].setAlpha(0);current=next;controls();this.tweens.add({targets:previous,alpha:0,duration:330,ease:'Sine.easeInOut'});this.tweens.add({targets:incoming,alpha:1,duration:330,ease:'Sine.easeInOut'})};left.on('pointerdown',()=>current===2&&turn(1));right.on('pointerdown',()=>current===1&&turn(2));down.on('pointerdown',()=>current===2?turn(0):current===0?turn(2):current===3&&turn(0));hotspot.on('pointerover',()=>current===0&&hotspot.setFillStyle(0xd7b66d,.045).setStrokeStyle(2,0xd7b66d,.55));hotspot.on('pointerout',()=>hotspot.setFillStyle(0xd7b66d,0).setStrokeStyle(0));hotspot.on('pointerdown',()=>current===0&&turn(3));this.input.keyboard.on('keydown-LEFT',()=>current===2&&turn(1));this.input.keyboard.on('keydown-RIGHT',()=>current===1&&turn(2));this.input.keyboard.on('keydown-DOWN',()=>current===2?turn(0):current===0?turn(2):current===3&&turn(0));this.input.keyboard.on('keydown-ENTER',()=>current===0&&turn(3));this.input.keyboard.on('keydown-ESC',()=>current===3&&turn(0));controls()}}
+    addEventListener('keydown',event=>{if(event.key==='Escape')closeInspect()});
+    renderJewel();
+
+    class RoomScene extends Phaser.Scene{
+      preload(){
+        this.load.image('bedroom','assets/village-chief-bedroom.png?v=items');
+        this.load.image('ladder','assets/village-chief-ladder.png?v=roses');
+        this.load.image('window','assets/village-chief-window.png?v=sunset');
+        this.load.image('yard','assets/village-chief-yard.png?v=game-reference');
+      }
+      create(){
+        const views=[
+          this.add.image(640,360,'window').setDisplaySize(1280,720).setAlpha(0),
+          this.add.image(640,360,'ladder').setDisplaySize(1280,720).setAlpha(0),
+          this.add.image(640,360,'bedroom').setDisplaySize(1280,720),
+          this.add.image(640,360,'yard').setDisplaySize(1280,720).setAlpha(0)
+        ];
+        let current=2,corpseFocused=false,flyClock=0;
+        const style={fontFamily:'Georgia',fontSize:'72px',color:'#ddd3bd',backgroundColor:'rgba(5,6,7,.42)',padding:{left:18,right:18,top:2,bottom:8}};
+        const left=this.add.text(34,310,'‹',style).setDepth(5).setInteractive({useHandCursor:true});
+        const right=this.add.text(1178,310,'›',style).setDepth(5);
+        const down=this.add.text(601,606,'⌄',style).setDepth(5);
+        const windowHotspot=this.add.rectangle(555,215,320,400,0xd7b66d,0).setDepth(4);
+        const jewelryHotspot=this.add.rectangle(477,292,104,58,0xd7b66d,0).setDepth(4);
+        const dogHotspot=this.add.rectangle(1012,548,320,205,0xd7b66d,0).setDepth(4);
+        const bedroom=views[2];
+        const bedroomBase={x:bedroom.x,y:bedroom.y,scaleX:bedroom.scaleX,scaleY:bedroom.scaleY};
+        const flies=Array.from({length:9},(_,index)=>{
+          const leftWing=this.add.ellipse(-2.2,-1,3.5,1.5,0xc7bda4,.42);
+          const rightWing=this.add.ellipse(2.2,-1,3.5,1.5,0xc7bda4,.42);
+          const body=this.add.ellipse(0,0,5.5,2.5,0x0c0a08,1);
+          return this.add.container(640,360,[leftWing,rightWing,body]).setDepth(12).setAlpha(0).setScale(.8+index%3*.16);
+        });
+        this.events.on('update',(_time,delta)=>{
+          if(!corpseFocused)return;
+          flyClock+=delta*.001;
+          flies.forEach((fly,index)=>{
+            const phase=flyClock*(1.35+index%4*.22)+index*1.91;
+            fly.x=650+Math.cos(phase)*(62+index%3*34)+Math.sin(phase*2.6)*13;
+            fly.y=360+Math.sin(phase*1.55)*(27+index%4*13)+Math.cos(phase*3.1)*9;
+            fly.rotation=phase*1.7;
+          });
+        });
+        const controls=()=>{
+          [left,right,down].forEach(button=>button.setAlpha(0).disableInteractive());
+          [windowHotspot,jewelryHotspot,dogHotspot].forEach(hotspot=>hotspot.disableInteractive().setFillStyle(0xd7b66d,0).setStrokeStyle(0));
+          if(corpseFocused){down.setAlpha(1).setInteractive({useHandCursor:true});return}
+          if(current===2){left.setAlpha(1).setInteractive({useHandCursor:true});down.setAlpha(1).setInteractive({useHandCursor:true});jewelryHotspot.setInteractive({useHandCursor:true});dogHotspot.setInteractive({useHandCursor:true})}
+          else if(current===1){right.setAlpha(1).setInteractive({useHandCursor:true})}
+          else if(current===0){down.setAlpha(1).setInteractive({useHandCursor:true});windowHotspot.setInteractive({useHandCursor:true})}
+          else{down.setAlpha(1).setInteractive({useHandCursor:true})}
+        };
+        const openCorpse=()=>{
+          if(current!==2||corpseFocused)return;
+          corpseFocused=true;controls();
+          const zoom=1.86,dogX=1012,dogY=548;
+          flies.forEach(fly=>this.tweens.add({targets:fly,alpha:.9,duration:260,delay:Math.random()*180}));
+          this.tweens.add({targets:bedroom,x:640-(dogX-640)*zoom,y:360-(dogY-360)*zoom,scaleX:bedroomBase.scaleX*zoom,scaleY:bedroomBase.scaleY*zoom,duration:620,ease:'Sine.easeInOut'});
+        };
+        const closeCorpse=()=>{
+          if(!corpseFocused)return;
+          corpseFocused=false;flies.forEach(fly=>fly.setAlpha(0));
+          this.tweens.add({targets:bedroom,...bedroomBase,duration:520,ease:'Sine.easeInOut'});controls();
+        };
+        const turn=next=>{
+          if(next===current)return;
+          const previous=views[current],incoming=views[next].setAlpha(0);current=next;controls();
+          this.tweens.add({targets:previous,alpha:0,duration:330,ease:'Sine.easeInOut'});
+          this.tweens.add({targets:incoming,alpha:1,duration:330,ease:'Sine.easeInOut'});
+        };
+        left.on('pointerdown',()=>current===2&&turn(1));
+        right.on('pointerdown',()=>current===1&&turn(2));
+        down.on('pointerdown',()=>corpseFocused?closeCorpse():current===2?turn(0):current===0?turn(2):current===3&&turn(0));
+        windowHotspot.on('pointerover',()=>current===0&&windowHotspot.setFillStyle(0xd7b66d,.045).setStrokeStyle(2,0xd7b66d,.55));
+        windowHotspot.on('pointerout',()=>windowHotspot.setFillStyle(0xd7b66d,0).setStrokeStyle(0));
+        windowHotspot.on('pointerdown',()=>current===0&&turn(3));
+        jewelryHotspot.on('pointerover',()=>current===2&&!corpseFocused&&jewelryHotspot.setFillStyle(0x9f2030,.1).setStrokeStyle(2,0xd7b66d,.62));
+        jewelryHotspot.on('pointerout',()=>jewelryHotspot.setFillStyle(0xd7b66d,0).setStrokeStyle(0));
+        jewelryHotspot.on('pointerdown',()=>current===2&&!corpseFocused&&openInspect());
+        dogHotspot.on('pointerover',()=>current===2&&!corpseFocused&&dogHotspot.setFillStyle(0x4f311f,.055).setStrokeStyle(2,0x8d7652,.42));
+        dogHotspot.on('pointerout',()=>dogHotspot.setFillStyle(0xd7b66d,0).setStrokeStyle(0));
+        dogHotspot.on('pointerdown',openCorpse);
+        this.input.keyboard.on('keydown-LEFT',()=>current===2&&turn(1));
+        this.input.keyboard.on('keydown-RIGHT',()=>current===1&&turn(2));
+        this.input.keyboard.on('keydown-DOWN',()=>corpseFocused?closeCorpse():current===2?turn(0):current===0?turn(2):current===3&&turn(0));
+        this.input.keyboard.on('keydown-ENTER',()=>current===0&&turn(3));
+        this.input.keyboard.on('keydown-ESC',()=>corpseFocused?closeCorpse():current===3&&turn(0));
+        controls();
+      }
+    }
     new Phaser.Game({type:Phaser.AUTO,parent:'game',width:1280,height:720,backgroundColor:'#090a0c',scene:RoomScene,scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH}});
   </script>
 </body>

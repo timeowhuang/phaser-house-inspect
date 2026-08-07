@@ -24,7 +24,24 @@ kbd { border:1px solid #4a4740; padding:3px 6px; color:#999184; font-family:inhe
 .item-copy p { color:#8f8b82; font:15px/1.9 Georgia,serif; }
 .rule { width:42px; height:1px; margin:28px 0; background:var(--gold); }
 .item-copy small { color:#68655e; font-size:10px; letter-spacing:1.8px; }
-.model { position:absolute; right:3vw; top:4vh; width:65vw; height:92vh; --poster-color:transparent; }
+.jewel-stage { position:absolute; right:1vw; top:0; width:67vw; height:100vh; display:grid; place-items:center; perspective:1200px; cursor:grab; touch-action:none; user-select:none; }
+.jewel-stage:active { cursor:grabbing; }
+.jewel-shadow { position:absolute; width:min(520px,48vw); height:120px; margin-top:280px; border-radius:50%; background:radial-gradient(ellipse,rgba(0,0,0,.9),rgba(0,0,0,0) 70%); filter:blur(10px); transform:rotate(-4deg); }
+.jewel-box-3d { position:relative; width:360px; height:112px; transform-style:preserve-3d; will-change:transform; }
+.jewel-face { position:absolute; border:3px solid #ad8b3e; background-color:#6e0714; background-image:radial-gradient(circle at 20% 25%,rgba(255,179,177,.22) 0 2px,transparent 3px),radial-gradient(circle at 72% 68%,rgba(255,190,173,.13) 0 2px,transparent 3px),repeating-linear-gradient(120deg,rgba(255,255,255,.045) 0 1px,transparent 1px 6px),linear-gradient(145deg,#a91d2d 0,#690612 48%,#3e040b 100%); box-shadow:inset 0 0 24px rgba(255,176,124,.12),inset 0 0 0 3px rgba(57,0,7,.72),0 0 18px rgba(0,0,0,.45); backface-visibility:hidden; }
+.jewel-front,.jewel-back { width:360px; height:112px; }
+.jewel-front { transform:translateZ(105px); }
+.jewel-front::before { content:""; position:absolute; left:0; right:0; top:29px; height:3px; background:linear-gradient(90deg,#6f511b,#d7bd68,#72531e); box-shadow:0 2px 5px rgba(0,0,0,.65); }
+.jewel-back { transform:rotateY(180deg) translateZ(105px); }
+.jewel-left,.jewel-right { left:75px; width:210px; height:112px; }
+.jewel-left { transform:rotateY(-90deg) translateZ(180px); }
+.jewel-right { transform:rotateY(90deg) translateZ(180px); }
+.jewel-top,.jewel-bottom { top:-49px; width:360px; height:210px; }
+.jewel-top { display:grid; place-items:center; transform:rotateX(90deg) translateZ(56px); background-image:radial-gradient(ellipse at center,rgba(255,219,181,.2),transparent 42%),repeating-radial-gradient(circle at 25% 30%,rgba(221,160,111,.14) 0 2px,transparent 3px 13px),linear-gradient(135deg,#b42235,#690612 60%,#43040c); }
+.jewel-bottom { transform:rotateX(-90deg) translateZ(56px); background:#240207; border-color:#5d451b; }
+.jewel-clasp { position:absolute; z-index:2; left:50%; top:22px; width:36px; height:43px; transform:translateX(-50%); border:2px solid #e0c56f; border-radius:4px 4px 9px 9px; background:linear-gradient(135deg,#6f4d15,#e0c66f 45%,#7b5619); box-shadow:0 2px 7px #210003; }
+.jewel-clasp::after { content:""; position:absolute; left:50%; top:13px; width:7px; height:12px; transform:translateX(-50%); border-radius:50% 50% 35% 35%; background:#3c250c; box-shadow:inset 0 1px #000; }
+.jewel-crest { display:grid; place-items:center; width:86px; height:86px; border:1px solid rgba(231,203,112,.78); border-radius:50%; color:#d9b95d; font-size:29px; text-shadow:0 0 8px rgba(240,194,91,.45); box-shadow:inset 0 0 0 5px rgba(104,60,18,.22); }
 @keyframes pulse { 50% { opacity:.35; box-shadow:0 0 4px #d8b968; } }
 @media (max-width:700px) {
   .game-frame { width:100vw; height:100dvh; aspect-ratio:auto; }
@@ -34,6 +51,7 @@ kbd { border:1px solid #4a4740; padding:3px 6px; color:#999184; font-family:inhe
   .item-copy h1 { margin:10px 0; font-size:42px; }
   .item-copy p { max-width:70%; margin:0; font-size:12px; line-height:1.5; }
   .rule { margin:14px 0; }
-  .model { right:0; top:3vh; width:100vw; height:66vh; }
+  .jewel-stage { right:0; top:0; width:100vw; height:68vh; transform:scale(.72); }
+  .jewel-shadow { margin-top:240px; }
 }
 @media (prefers-reduced-motion:reduce) { * { animation:none!important; transition:none!important; } }
