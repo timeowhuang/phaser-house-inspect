@@ -10,6 +10,6 @@ The adjacent attic-ladder and window views are AI-generated continuity plates ba
 
 https://www.gamerevolution.com/guides/937536-resident-evil-4-remake-collapsible-ladder-village-chiefs-manor
 
-The exterior yard is an AI-generated continuity scene informed by the documented Village Chief's Manor Yard connections and layout:
+The exterior yard is an AI-generated continuity scene shown from the second-floor bedroom window, informed by the documented Village Chief's Manor Yard connections and layout:
 
 https://www.evilresource.com/resident-evil-4-remake/maps/village/village-chiefs-manor-abandoned-factory-valley/village-chiefs-manor-yard
