@@ -16,8 +16,8 @@
   <main class="shell">
     <div class="frame" aria-label="互动书房场景">
       <div id="game" class="stage"></div>
-      <div class="hud"><span class="pulse"></span><span id="hint">寻找房间里微微发光的物品</span></div>
-      <div class="controls"><kbd>鼠标</kbd> 探索　<kbd>点击</kbd> 检查物品</div>
+      <div class="hud"><span class="pulse"></span><span id="hint">场景准备完成 · 等待设置互动对象</span></div>
+      <div class="controls"><kbd>下一步</kbd> 指定需要互动的物品</div>
     </div>
     <section id="inspect" class="inspect" aria-hidden="true">
       <div class="grain"></div>
@@ -32,7 +32,7 @@
     function closeInspect(){inspect.classList.remove('open');inspect.setAttribute('aria-hidden','true')}
     document.querySelector('#close').addEventListener('click',closeInspect);
     addEventListener('keydown',e=>{if(e.key==='Escape')closeInspect()});
-    class RoomScene extends Phaser.Scene{create(){const w=1280,h=720,g=this.add.graphics();g.fillGradientStyle(0x272522,0x272522,0x0b0d10,0x0b0d10,1);g.fillRect(0,0,w,h);g.fillStyle(0x17191b);g.fillTriangle(0,500,w,500,w,h);g.fillTriangle(0,500,0,h,w,h);for(let i=0;i<11;i++){g.lineStyle(1,0x36322c,.5);g.lineBetween(i*128,500,w/2+(i-5)*80,h)}g.fillStyle(0x050607);g.fillRect(90,115,300,310);g.lineStyle(12,0x4b4032);g.strokeRect(90,115,300,310);g.fillStyle(0x15212a);g.fillRect(107,132,266,276);g.lineStyle(3,0x918064,.55);g.lineBetween(240,132,240,408);g.lineBetween(107,270,373,270);g.fillStyle(0x383029);g.fillRect(925,130,250,385);g.lineStyle(10,0x201b17);g.strokeRect(925,130,250,385);g.fillStyle(0xb6a57b,.38);g.fillCircle(1135,327,8);g.fillStyle(0x1c1713);g.fillRect(435,405,420,28);g.fillRect(470,433,24,112);g.fillRect(800,433,24,112);g.fillStyle(0x7d6845);g.fillEllipse(650,397,70,22);g.fillStyle(0x27231e);g.fillRect(610,315,80,78);g.fillStyle(0xc4ad75,.9);g.fillCircle(650,340,16);const glow=this.add.circle(650,345,58,0xd7ba73,.07).setInteractive({useHandCursor:true});this.tweens.add({targets:glow,alpha:.25,scale:1.18,yoyo:true,repeat:-1,duration:1400});glow.on('pointerover',()=>{glow.setFillStyle(0xe3c47b,.22);hint.textContent='点击检查：来源不明的金属雕像'});glow.on('pointerout',()=>{glow.setFillStyle(0xd7ba73,.07);hint.textContent='寻找房间里微微发光的物品'});glow.on('pointerdown',openInspect);this.add.text(52,48,'THE SILENT HOUSE',{fontFamily:'Georgia',fontSize:'22px',color:'#c5b68c',letterSpacing:7});this.add.text(54,80,'书房 · 00:17',{fontFamily:'Arial',fontSize:'14px',color:'#77736a',letterSpacing:2})}}
+    class RoomScene extends Phaser.Scene{preload(){this.load.image('village-chief-bedroom','assets/village-chief-bedroom.png')}create(){this.add.image(640,360,'village-chief-bedroom').setDisplaySize(1280,720);this.add.text(52,48,"VILLAGE CHIEF'S MANOR",{fontFamily:'Georgia',fontSize:'22px',color:'#c5b68c',letterSpacing:6});this.add.text(54,80,'二楼卧室 · 00:17',{fontFamily:'Arial',fontSize:'14px',color:'#8c877b',letterSpacing:2})}}
     new Phaser.Game({type:Phaser.AUTO,parent:'game',width:1280,height:720,backgroundColor:'#090a0c',scene:RoomScene,scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH}});
   </script>
 </body>
