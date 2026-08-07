@@ -37,7 +37,7 @@ export default function Home() {
         preload() {
           this.load.image("village-chief-bedroom", "/rooms/village-chief-bedroom.png");
           this.load.image("village-chief-ladder", "/rooms/village-chief-ladder.png");
-          this.load.image("village-chief-window", "/rooms/village-chief-window.png");
+          this.load.image("village-chief-window", "/rooms/village-chief-window.png?v=sunset");
         }
         create() {
           const views = [
