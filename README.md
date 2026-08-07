@@ -1,4 +1,4 @@
-# The Silent House
+# house
 
 一个使用 Phaser 制作的互动房间原型，包含类似《生化危机》的 3D 道具检视功能。
 

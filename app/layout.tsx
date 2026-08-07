@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "The Silent House · 互动探索",
+  title: "house",
   description: "使用 Phaser 构建的互动房间与 3D 道具检视体验。",
 };
 
